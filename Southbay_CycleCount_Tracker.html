@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Southbay · CYC Scorecard · Southbay 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#0d0f14;--surface:#161820;--surface2:#1e2029;--border:#2a2d3a;
+    --text:#e8eaf0;--muted:#6b7080;--dim:#9399a8;
+    --accent:#00d4aa;--accent2:#4d9fff;--warn:#ffb84d;--danger:#ff5c5c;--ok:#52e3a0;
+    --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;padding:20px;}
+
+  .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+  .client-tag{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--accent);text-transform:uppercase;margin-bottom:5px;}
+  h1{font-size:20px;font-weight:600;letter-spacing:-.02em;}
+  .subtitle{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+  .week-badge{font-family:var(--mono);font-size:11px;background:var(--surface2);border:1px solid var(--border);padding:6px 14px;border-radius:4px;color:var(--dim);}
+  .week-badge span{color:var(--accent);font-weight:600;}
+  .date-lbl{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:5px;text-align:right;}
+
+  /* Upload */
+  .upload-section{background:var(--surface);border:1px dashed var(--border);border-radius:8px;padding:16px 20px;margin-bottom:22px;display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;}
+  .upload-group{flex:1;min-width:200px;}
+  .upload-label{font-size:10px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+  .file-input-wrapper{position:relative;}
+  .file-btn{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);padding:8px 14px;border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--dim);transition:border-color .2s,color .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;}
+  .file-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .file-btn.loaded{border-color:var(--ok);color:var(--ok);}
+  input[type=file]{position:absolute;opacity:0;width:100%;height:100%;top:0;left:0;cursor:pointer;}
+  .load-btn{background:var(--accent);color:#000;border:none;padding:9px 20px;border-radius:4px;font-family:var(--mono);font-size:12px;font-weight:600;cursor:pointer;letter-spacing:.05em;transition:opacity .2s;white-space:nowrap;}
+  .load-btn:hover{opacity:.85;}
+  .load-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .status-msg{font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:4px;}
+  .status-msg.ok{background:rgba(82,227,160,.1);color:var(--ok);border:1px solid rgba(82,227,160,.3);}
+  .status-msg.err{background:rgba(255,92,92,.1);color:var(--danger);border:1px solid rgba(255,92,92,.3);}
+
+  /* Cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:22px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c,var(--accent));}
+  .card-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:7px;}
+  .card-val{font-family:var(--mono);font-size:24px;font-weight:600;line-height:1;margin-bottom:3px;color:var(--c,var(--text));}
+  .card-sub{font-size:11px;color:var(--muted);}
+
+  /* Section title */
+  .sec{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px;}
+  .sec::after{content:'';flex:1;height:1px;background:var(--border);}
+
+  /* Zone table */
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:22px;}
+  th{text-align:left;padding:7px 10px;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;font-weight:500;}
+  td{padding:10px 10px;border-bottom:1px solid rgba(42,45,58,.6);vertical-align:middle;}
+  tr:last-child td{border-bottom:none;}
+  .zname{font-weight:500;}
+  .ztype{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px;}
+  .num{font-family:var(--mono);font-size:12px;text-align:right;}
+
+  /* Progress */
+  .pb-wrap{display:flex;align-items:center;gap:8px;}
+  .pb{flex:1;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;position:relative;}
+  .pb-plan{position:absolute;height:100%;background:var(--border);border-radius:3px;}
+  .pb-real{position:absolute;height:100%;border-radius:3px;}
+  .pb-pct{font-family:var(--mono);font-size:11px;font-weight:600;min-width:42px;text-align:right;}
+
+  .chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:3px;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.05em;white-space:nowrap;}
+  .chip-ok{background:rgba(82,227,160,.12);color:var(--ok);}
+  .chip-warn{background:rgba(255,184,77,.12);color:var(--warn);}
+  .chip-danger{background:rgba(255,92,92,.12);color:var(--danger);}
+  .chip-neutral{background:rgba(107,112,128,.15);color:var(--muted);}
+  .delta{font-family:var(--mono);font-size:11px;font-weight:600;}
+  .dp{color:var(--ok);} .dn{color:var(--danger);} .dz{color:var(--muted);}
+
+  /* Chart */
+  .chart-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:22px;}
+  .chart-hdr{font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:12px;}
+  .zone-filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .fbtn{font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.05em;}
+  .fbtn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+
+  /* Heatmap */
+  .heatmap-tbl{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:9px;}
+  .heatmap-tbl th{text-align:center;padding:3px 2px;color:var(--muted);font-weight:400;}
+  .heatmap-tbl th.zone-th{text-align:left;padding:3px 8px;min-width:130px;}
+  .heatmap-tbl td{padding:2px 1px;}
+  .hm-cell{text-align:center;padding:2px 1px;border-radius:2px;font-weight:600;min-width:22px;color:#000;}
+
+  .placeholder{text-align:center;padding:50px 20px;color:var(--muted);font-family:var(--mono);font-size:12px;}
+  .placeholder .big{font-size:36px;margin-bottom:10px;opacity:.25;}
+
+  .info-note{font-family:var(--mono);font-size:10px;color:var(--muted);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:22px;line-height:1.7;}
+  .info-note strong{color:var(--dim);}
+
+  /* Global progress banner */
+  .global-banner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .global-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+  .banner-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .banner-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .banner-pct {
+    font-family: var(--mono);
+    font-size: 42px;
+    font-weight: 600;
+    line-height: 1;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .banner-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--dim);
+    margin-top: 2px;
+  }
+  .banner-right {
+    text-align: right;
+  }
+  .banner-track {
+    height: 10px;
+    background: var(--surface2);
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .banner-track-plan {
+    position: absolute;
+    height: 100%;
+    background: var(--border);
+    border-radius: 5px;
+    transition: width 1s ease;
+  }
+  .banner-track-real {
+    position: absolute;
+    height: 100%;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 1s ease;
+    box-shadow: 0 0 12px rgba(0,212,170,.35);
+  }
+  .banner-legend {
+    display: flex;
+    gap: 18px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .banner-legend span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+
+  /* KPI Section */
+  .kpi-section { margin-bottom: 22px; }
+  .kpi-global-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--kpi-color, var(--border));
+  }
+  .kpi-name {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .kpi-value {
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--kpi-color, var(--text));
+    margin-bottom: 6px;
+  }
+  .kpi-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .kpi-target {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .kpi-delta {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .kpi-delta.ok     { background: rgba(82,227,160,.12); color: var(--ok); }
+  .kpi-delta.warn   { background: rgba(255,184,77,.12);  color: var(--warn); }
+  .kpi-delta.danger { background: rgba(255,92,92,.12);   color: var(--danger); }
+
+  /* Detail table toggle */
+  .kpi-detail-toggle {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 4px 12px;
+    cursor: pointer;
+    letter-spacing: .05em;
+    transition: all .15s;
+    margin-bottom: 12px;
+  }
+  .kpi-detail-toggle:hover { border-color: var(--accent); background: rgba(0,212,170,.06); }
+
+  /* KPI detail table */
+  .kpi-detail { display: none; overflow-x: auto; }
+  .kpi-detail.open { display: block; }
+  .kpi-tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 8px; }
+  .kpi-tbl th {
+    text-align: right;
+    padding: 6px 10px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: .08em;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .kpi-tbl th:first-child { text-align: left; }
+  .kpi-tbl td { padding: 7px 10px; border-bottom: 1px solid rgba(42,45,58,.5); text-align: right; font-family: var(--mono); font-size: 11px; }
+  .kpi-tbl td:first-child { text-align: left; color: var(--dim); }
+  .kpi-tbl tr:last-child td { border-bottom: none; }
+  .kpi-tbl tr.subtotal td { background: var(--surface2); font-weight: 600; color: var(--text); border-top: 1px solid var(--border); }
+  .kpi-tbl tr.subtotal td:first-child { color: var(--accent2); }
+  .kv { font-weight: 600; }
+  .kv.ok     { color: var(--ok); }
+  .kv.warn   { color: var(--warn); }
+  .kv.danger { color: var(--danger); }
+
+
+  /* Rankings section */
+  .rankings-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  @media (max-width: 900px) { .rankings-grid { grid-template-columns: 1fr; } }
+  .ranking-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .ranking-card-hdr {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .ranking-card-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .ranking-card-sub {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .ranking-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(42,45,58,.4);
+    transition: background .15s;
+  }
+  .ranking-row:last-child { border-bottom: none; }
+  .ranking-row:hover { background: var(--surface2); }
+  .rank-pos {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 16px;
+    text-align: right;
+  }
+  .rank-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .rank-bar-wrap {
+    flex: 1;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .rank-bar { height: 100%; border-radius: 2px; background: var(--danger); }
+  .rank-vals {
+    text-align: right;
+    min-width: 60px;
+  }
+  .rank-total {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--danger);
+  }
+  .rank-detail {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+
+  /* KPI Trend chart */
+  .trend-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+  }
+  .trend-hdr {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .trend-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+  .trend-legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .trend-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .trend-dot {
+    width: 10px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .trend-tip {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 12px;
+    line-height: 1.7;
+  }
+  .trend-tip strong { color: var(--dim); }
+
+  /* CIA relative error */
+  .cia-rel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .cia-rel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .cia-rel-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .cia-rel-name span {
+    font-size: 9px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  .cia-rel-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+  .cia-rel-lbl { color: var(--muted); }
+  .cia-err-bar {
+    height: 3px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 6px 0 8px;
+  }
+  .cia-err-fill { height: 100%; border-radius: 2px; background: var(--danger); }
+  .cia-tip {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 22px;
+    line-height: 1.7;
+  }
+  .cia-tip strong { color: var(--dim); }
+
+  /* Recurrence */
+  .reinc-tip {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 10px;
+    line-height: 1.7;
+  }
+  .reinc-tip strong { color: var(--dim); }
+  .reinc-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .reinc-1 { background: rgba(107,112,128,.2); color: var(--muted); }
+  .reinc-2 { background: rgba(255,184,77,.15); color: var(--warn); }
+  .reinc-3 { background: rgba(255,92,92,.15);  color: var(--danger); }
+
+
+  /* Projection section */
+  .proj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .proj-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .proj-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--proj-color, var(--border));
+  }
+  .proj-zona {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .proj-zona small {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    font-weight: 400;
+    display: block;
+    margin-top: 2px;
+  }
+  .proj-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .proj-row strong {
+    color: var(--text);
+    font-size: 11px;
+  }
+  .proj-date {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+  .proj-date small {
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+  }
+  .proj-bar-wrap {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .proj-bar { height: 100%; border-radius: 2px; }
+  .proj-status-ok     { color: var(--ok); }
+  .proj-status-warn   { color: var(--warn); }
+  .proj-status-danger { color: var(--danger); }
+  .proj-tip {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 22px;
+    line-height: 1.7;
+  }
+  .proj-tip strong { color: var(--dim); }
+  .proj-inactive {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    padding: 12px 0;
+  }
+
+
+  /* Immobilized detail table */
+  .inm-detail { display:none; margin-top:14px; }
+  .inm-detail.open { display:block; }
+  .inm-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+  .inm-tbl th {
+    text-align:left; padding:6px 10px;
+    background:var(--surface2); border-bottom:1px solid var(--border);
+    font-family:var(--mono); font-size:9px; letter-spacing:.08em;
+    color:var(--muted); text-transform:uppercase; font-weight:500;
+    white-space:nowrap; cursor:pointer;
+  }
+  .inm-tbl th:hover { color:var(--accent); }
+  .inm-tbl td { padding:7px 10px; border-bottom:1px solid rgba(42,45,58,.5); font-family:var(--mono); font-size:11px; }
+  .inm-tbl tr:last-child td { border-bottom:none; }
+  .inm-tbl tr:hover td { background:var(--surface2); }
+  .inm-actions {
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:10px; flex-wrap:wrap;
+  }
+  .inm-toggle {
+    font-family:var(--mono); font-size:10px; color:var(--accent);
+    background:none; border:1px solid var(--border); border-radius:3px;
+    padding:4px 12px; cursor:pointer; letter-spacing:.05em; transition:all .15s;
+  }
+  .inm-toggle:hover { border-color:var(--accent); background:rgba(0,212,170,.06); }
+  .inm-export {
+    font-family:var(--mono); font-size:10px; color:#000;
+    background:var(--accent); border:none; border-radius:3px;
+    padding:5px 14px; cursor:pointer; font-weight:600; letter-spacing:.05em;
+    transition:opacity .15s;
+  }
+  .inm-export:hover { opacity:.85; }
+  .inm-count { font-family:var(--mono); font-size:10px; color:var(--muted); }
+  .dias-chip {
+    display:inline-block; padding:2px 7px; border-radius:3px;
+    font-weight:600; font-size:10px;
+  }
+  .dias-30 { background:rgba(255,184,77,.15); color:var(--warn); }
+  .dias-60 { background:rgba(255,120,50,.15); color:#ff7832; }
+  .dias-90 { background:rgba(255,92,92,.15);  color:var(--danger); }
+  .inm-filter {
+    font-family:var(--mono); font-size:10px; padding:4px 8px;
+    background:var(--surface2); border:1px solid var(--border); border-radius:3px;
+    color:var(--dim); outline:none; cursor:pointer;
+  }
+  .inm-filter:focus { border-color:var(--accent); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="client-tag">ITL · Southbay / Nike</div>
+    <h1>CYC Scorecard · Southbay 2026</h1>
+    <div class="subtitle">Plan vs Real · Acumulado semanal</div>
+  </div>
+  <div>
+    <div class="week-badge">Semana: <span id="weekLbl">–</span></div>
+    <div class="date-lbl" id="dateLbl">–</div>
+  </div>
+</div>
+
+<div class="info-note">
+  <strong>Cómo usar:</strong> Subí la <strong>Planificación</strong> una sola vez (sheet "Maestro" + "Referencia") y actualizá el <strong>Acumulado</strong> todos los días con el nuevo export de Teoricos_Southbay.xlsx (sheet "Acumulado Southbay"). El dashboard calcula automáticamente el avance por zona vs plan.
+</div>
+
+<div class="upload-section">
+  <div class="upload-group">
+    <div class="upload-label">📋 Planificación (una sola vez)</div>
+    <div class="file-input-wrapper">
+      <div class="file-btn" id="planBtn">📂 Subir Planificación_2026.xlsx</div>
+      <input type="file" id="planFile" accept=".xlsx,.xls">
+    </div>
+  </div>
+  <div class="upload-group">
+    <div class="upload-label">📊 Acumulado (actualizar diario)</div>
+    <div class="file-input-wrapper">
+      <div class="file-btn" id="acumBtn">📂 Subir Teoricos_Southbay.xlsx</div>
+      <input type="file" id="acumFile" accept=".xlsx,.xls">
+    </div>
+  </div>
+  <div class="upload-group">
+    <div class="upload-label">📦 Stock actual (opcional)</div>
+    <div class="file-input-wrapper">
+      <div class="file-btn" id="stockBtn">📂 Subir foto de stock</div>
+      <input type="file" id="stockFile" accept=".xlsx,.xls">
+    </div>
+  </div>
+  <button class="load-btn" id="loadBtn" disabled>PROCESAR →</button>
+  <div id="statusMsg" class="status-msg" style="display:none"></div>
+</div>
+
+<div id="diagMsg" style="display:none;font-family:var(--mono);font-size:10px;color:var(--dim);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:8px 14px;margin-bottom:16px;line-height:1.7;"></div>
+
+<div id="dashboard" style="display:none">
+<div class="global-banner" id="globalBanner">
+    <div class="banner-top">
+      <div>
+        <div class="banner-title">Avance general del año</div>
+        <div class="banner-pct" id="bannerPct">–%</div>
+        <div class="banner-meta" id="bannerMeta">–</div>
+      </div>
+      <div class="banner-right">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:4px">vs plan acumulado</div>
+        <div class="banner-pct" id="bannerVsPlan" style="font-size:28px">–%</div>
+        <div class="banner-meta" id="bannerVsPlanMeta">–</div>
+      </div>
+    </div>
+    <div class="banner-track">
+      <div class="banner-track-plan" id="bannerTrackPlan"></div>
+      <div class="banner-track-real" id="bannerTrackReal"></div>
+    </div>
+    <div class="banner-legend">
+      <span><span class="dot" style="background:linear-gradient(90deg,var(--accent2),var(--accent))"></span>Real acumulado</span>
+      <span><span class="dot" style="background:var(--border)"></span>Plan acumulado a la fecha</span>
+    </div>
+  </div>
+
+  <!-- Projection section -->
+  <div class="kpi-section" id="projSection">
+    <div class="sec">Proyección de cierre anual · ritmo últimas 2 semanas</div>
+    <div class="proj-grid" id="projGrid"></div>
+    <div class="proj-tip" id="projTip"></div>
+  </div>
+
+
+<div class="kpi-section">
+    <div class="sec">KPIs de precisión · Acumulado global</div>
+    <div class="kpi-global-row" id="kpiGlobalRow"></div>
+    <button class="kpi-detail-toggle" id="kpiToggleBtn" onclick="toggleKpiDetail()">▼ Ver detalle por día / mes</button>
+    <div class="kpi-detail" id="kpiDetail">
+      <table class="kpi-tbl" id="kpiDetailTbl"></table>
+    </div>
+  </div>
+
+  <!-- KPI Trend -->
+  <div class="trend-box">
+    <div class="trend-hdr">
+      <div class="trend-title">Tendencia de KPIs · Acumulado semanal</div>
+      <div class="trend-legend">
+        <div class="trend-legend-item"><div class="trend-dot" style="background:#00d4aa"></div>Gross</div>
+        <div class="trend-legend-item"><div class="trend-dot" style="background:#4d9fff"></div>Net</div>
+        <div class="trend-legend-item"><div class="trend-dot" style="background:#ffb84d"></div>IRA</div>
+        <div class="trend-legend-item"><div class="trend-dot" style="background:rgba(255,255,255,.15);border:1px dashed rgba(255,255,255,.2)"></div>Target</div>
+      </div>
+    </div>
+    <canvas id="kpiTrendChart" height="160"></canvas>
+    <div class="trend-tip" id="kpiTrendTip"></div>
+  </div>
+
+
+  <div class="cards" id="cards"></div>
+  <div class="sec">Avance por zona · hasta semana <span id="semLbl" style="color:var(--accent)">–</span></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Zona</th>
+        <th style="text-align:right">Universo</th>
+        <th style="text-align:right">Plan acum.</th>
+        <th style="text-align:right">Real acum.</th>
+        <th style="text-align:right">Δ vs plan</th>
+        <th style="text-align:right">% desvío</th>
+        <th style="min-width:170px">Avance s/ universo</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+
+  <!-- Stock coverage section -->
+  <div id="stockSection" style="display:none">
+    <div class="sec">Cobertura de stock · foto actual</div>
+    <div class="cards" id="stockCards" style="margin-bottom:16px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
+      <div class="chart-box" style="margin-bottom:0">
+        <div class="chart-hdr">Stock sin contar por zona · unidades</div>
+        <canvas id="stockZonaChart" height="200"></canvas>
+      </div>
+      <div class="chart-box" style="margin-bottom:0">
+        <div class="chart-hdr">Stock inmovilizado ≥30 días · por antigüedad</div>
+        <canvas id="stockInmChart" height="200"></canvas>
+      </div>
+    </div>
+    <div class="sec">Stock inmovilizado · detalle por CIA y zona</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px" id="stockInmCards"></div>
+    <div class="inm-actions">
+      <button class="inm-toggle" id="inmToggleBtn" onclick="toggleInmDetail()">▼ Ver detalle de posiciones inmovilizadas</button>
+      <button class="inm-export" id="inmExportBtn" onclick="exportInmXLSX()" style="display:none">⬇ Exportar a Excel</button>
+      <span class="inm-count" id="inmCount"></span>
+      <select class="inm-filter" id="inmCiaFilter" onchange="filterInmTable()" style="display:none">
+        <option value="">Todas las CIAs</option>
+      </select>
+      <select class="inm-filter" id="inmDiasFilter" onchange="filterInmTable()" style="display:none">
+        <option value="">Todos los días</option>
+        <option value="30">30-45 días</option>
+        <option value="45">45-60 días</option>
+        <option value="60">60-90 días</option>
+        <option value="90">90+ días</option>
+      </select>
+    </div>
+    <div class="inm-detail" id="inmDetail">
+      <table class="inm-tbl" id="inmTbl">
+        <thead><tr>
+          <th onclick="sortInmTable('pasillo')">Pasillo ↕</th>
+          <th onclick="sortInmTable('posicion')">Posición ↕</th>
+          <th onclick="sortInmTable('cia')">CIA ↕</th>
+          <th onclick="sortInmTable('sku')">SKU ↕</th>
+          <th onclick="sortInmTable('qty')" style="text-align:right">Cantidad ↕</th>
+          <th onclick="sortInmTable('fecha')">Últ. conteo ↕</th>
+          <th onclick="sortInmTable('dias')" style="text-align:right">Días inm. ↕</th>
+        </tr></thead>
+        <tbody id="inmTblBody"></tbody>
+      </table>
+    </div>
+    <div class="proj-tip" id="stockTip"></div>
+  </div>
+
+
+  <!-- CIA relative error -->
+  <div class="sec">Error relativo por CIA · % sobre teórico propio</div>
+  <div class="cia-rel-grid" id="ciaRelGrid"></div>
+  <div class="cia-tip" id="ciaTip"></div>
+
+
+  <div class="kpi-section">
+    <div class="sec">Rankings de diferencias · Acumulado</div>
+    <div class="rankings-grid" id="rankingsGrid"></div>
+    <div class="reinc-tip" id="reincTip"></div>
+  </div>
+
+
+  <div class="chart-box">
+    <div class="chart-hdr">Curva acumulada — Plan (línea punteada) vs Real (línea sólida)</div>
+    <div class="zone-filters" id="filters"></div>
+    <canvas id="chart" height="200"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <div class="chart-hdr">Heatmap semanal — % de posiciones contadas vs plan de la semana</div>
+    <div style="overflow-x:auto"><table class="heatmap-tbl" id="heatmap"></table></div>
+  </div>
+
+
+</div>
+
+<div id="placeholder" class="placeholder">
+  <div class="big">📦</div>
+  Subí los dos archivos y hacé clic en <strong>PROCESAR</strong>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const ZONA_COLORS = {
+  'Mezzanine':'#4d9fff','Picking Pallet':'#00d4aa','Rack':'#ffb84d',
+  'Baldas Cajas':'#c084fc','Baldas de unidades':'#fb923c'
+};
+const ZONA_VUELTAS = {
+  'Mezzanine':3,'Picking Pallet':3,'Baldas Cajas':3,'Baldas de unidades':3,'Rack':1
+};
+const ZONA_LABEL_MAP = {'Picking pallet':'Picking Pallet'};
+
+let STATE = { weekRef:null, planBySemZone:null, posZone:null, realBySemZone:null, chart:null, activeFilter:'ALL' };
+
+// ── FILE HANDLERS ──
+['plan','acum'].forEach(id => {
+  document.getElementById(id+'File').addEventListener('change', e => {
+    if(e.target.files[0]){
+      document.getElementById(id+'Btn').textContent = '✓ '+e.target.files[0].name;
+      document.getElementById(id+'Btn').classList.add('loaded');
+    }
+    const p=document.getElementById('planFile').files[0];
+    const a=document.getElementById('acumFile').files[0];
+    document.getElementById('loadBtn').disabled=!(p&&a);
+  });
+});
+
+document.getElementById('loadBtn').addEventListener('click', () => {
+  showStatus('Procesando…','ok');
+  const pf=document.getElementById('planFile').files[0];
+  const af=document.getElementById('acumFile').files[0];
+  let done=0;
+  const sf = document.getElementById('stockFile').files[0];
+  const total = sf ? 3 : 2;
+  readXLSX(pf, wb => { parsePlan(wb);  done++; if(done===total) render(); });
+  readXLSX(af, wb => { parseAcum(wb);  done++; if(done===total) render(); });
+  if (sf) readXLSX(sf, wb => { parseStock(wb); done++; if(done===total) render(); });
+});
+
+function readXLSX(file, cb) {
+  const r=new FileReader();
+  r.onload=e=>{ const wb=XLSX.read(e.target.result,{type:'array',cellDates:true}); cb(wb); };
+  r.readAsArrayBuffer(file);
+}
+
+function showStatus(msg,type){
+  const el=document.getElementById('statusMsg');
+  el.textContent=msg; el.className='status-msg '+type; el.style.display='block';
+}
+
+// ── HELPERS ──
+// Normalizar posición a string limpio, sin espacios, sin .0 al final
+function normPos(v) {
+  if(v===null||v===undefined) return '';
+  let s = String(v).trim();
+  // Si xlsx.js parseó como número con .0 al final
+  if(s.endsWith('.0')) s = s.slice(0, -2);
+  // Si Excel comió el cero inicial (ej. 9 dígitos empezando con 8 → debería ser 10 con 0 adelante)
+  if(/^8\d{8}$/.test(s)) s = '0' + s;
+  return s;
+}
+
+// Convertir fecha de Excel (serial number o Date o string)
+function toDate(v) {
+  if(!v) return null;
+  if(v instanceof Date) return v;
+  if(typeof v === 'number') {
+    // Excel serial date: días desde 1900-01-01 (con bug del año bisiesto de Lotus)
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    return d;
+  }
+  const d = new Date(v);
+  return isNaN(d) ? null : d;
+}
+
+// ── PARSE PLAN ──
+function parsePlan(wb) {
+  const sheetMaestro = wb.Sheets['Maestro'] || wb.Sheets[wb.SheetNames[0]];
+  // raw:true para no convertir tipos, luego los manejamos nosotros
+  const maestro = XLSX.utils.sheet_to_json(sheetMaestro, {defval:''});
+
+  const refSheet = wb.Sheets['Referencia'] || wb.Sheets[wb.SheetNames[1]];
+  const refRaw = XLSX.utils.sheet_to_json(refSheet, {header:1, defval:''});
+
+  // ── Week reference ──
+  const weekRef = [];
+  refRaw.forEach(row => {
+    const sem = row[1], fechaRaw = row[2], cuatri = row[0];
+    if(typeof sem === 'string' && sem.startsWith('Semana') && fechaRaw) {
+      const semNum = parseInt(sem.replace('Semana ',''));
+      const d = toDate(fechaRaw);
+      if(d && !isNaN(d)) {
+        weekRef.push({semNum, semStr:sem, fecha:d, cuatrimestre: typeof cuatri==='string'?cuatri:''});
+      }
+    }
+  });
+  weekRef.sort((a,b) => a.semNum - b.semNum);
+  STATE.weekRef = weekRef;
+
+  // ── posZone + planBySemZone (con deduplicación) ──
+  const posZone = {};
+  const planDedup = {}; // {zona|semNum: Set<pos>}
+
+  maestro.forEach(row => {
+    // Intentar distintas variantes del nombre de columna
+    const pos = normPos(row['Posición'] || row['Posicion'] || row['POSICION'] || row['posicion'] || '');
+    const whseid = String(row['Whseid'] || row['WHSEID'] || '').trim();
+    const zona = ZONA_LABEL_MAP[whseid] || whseid;
+    const semRaw = String(row['Semana'] || '').trim();
+    const semNum = semRaw ? parseInt(semRaw.replace('Semana ','')) : null;
+
+    if(pos && zona) posZone[pos] = zona;
+
+    if(pos && zona && semNum && !isNaN(semNum)) {
+      const key = `${zona}|||${semNum}`;
+      if(!planDedup[key]) planDedup[key] = new Set();
+      planDedup[key].add(pos);
+    }
+  });
+
+  const planBySemZone = {};
+  Object.entries(planDedup).forEach(([key, set]) => {
+    const [zona, semStr] = key.split('|||');
+    const semNum = parseInt(semStr);
+    if(!planBySemZone[zona]) planBySemZone[zona] = {};
+    planBySemZone[zona][semNum] = set.size;
+  });
+
+  STATE.posZone = posZone;
+  STATE.planBySemZone = planBySemZone;
+
+  // Debug
+  const posCount = Object.keys(posZone).length;
+  const zonas = [...new Set(Object.values(posZone))];
+}
+
+// ── PARSE ACUMULADO ──
+function parseAcum(wb) {
+  // Log todas las sheets disponibles
+
+  const shName = wb.SheetNames.find(n => /acumulado\s+southbay/i.test(n))
+             || wb.SheetNames.find(n => /acumulado/i.test(n) && !/^td_/i.test(n))
+             || wb.SheetNames.find(n => /acumulado/i.test(n))
+             || wb.SheetNames[0];
+
+  // Leer con cellDates:true primero para ver cómo vienen las fechas
+  const rowsRaw = XLSX.utils.sheet_to_json(wb.Sheets[shName], {defval:'', cellDates:true});
+
+  if(rowsRaw.length > 0) {
+  }
+
+  const acum = rowsRaw.map(r => {
+    // Intentar TODAS las variantes de nombre de columna
+    const posRaw = r['Posicion'] ?? r['Posición'] ?? r['POSICION'] ?? r['posicion'] ?? r['Position'] ?? '';
+    const fechaRaw = r['Fecha'] ?? r['FECHA'] ?? r['fecha'] ?? r['Date'] ?? r['date'] ?? '';
+
+    const pos = normPos(posRaw);
+    const fecha = toDate(fechaRaw);
+
+    return {
+      fecha,
+      posicion: pos,
+      cyc:   String(r['CYC']   || r['Cyc']   || r['cyc']   || ''),
+      cia:   String(r['CIA']   || r['Cia']   || r['cia']   || ''),
+      sku:   String(r['SKU']   || r['Sku']   || r['sku']   || '').trim(),
+      stock: Number(r['Stock'] || r['STOCK'] || r['stock'] || 0),
+      fisico:Number(r['Fisico']|| r['FISICO']|| r['fisico']|| 0),
+      dif:   Number(r['Dif']   || r['DIF']   || r['dif']   || 0),
+    };
+  }).filter(r => {
+    const ok = r.posicion && r.posicion !== '' && r.posicion !== 'undefined' && r.fecha && !isNaN(r.fecha.getTime());
+    return ok;
+  });
+
+  STATE.acumRaw = acum;
+  if(acum.length > 0) {
+  } else if(rowsRaw.length > 0) {
+    // Mostrar por qué fallan las filas
+    const sample = rowsRaw.slice(0,3).map(r => {
+      const posRaw = r['Posicion'] ?? r['Posición'] ?? r['POSICION'] ?? '';
+      const fechaRaw = r['Fecha'] ?? r['FECHA'] ?? '';
+      const pos = normPos(posRaw);
+      const fecha = toDate(fechaRaw);
+      return {
+        posRaw, pos, posOk: pos && pos !== '' && pos !== 'undefined',
+        fechaRaw, fecha, fechaOk: fecha && !isNaN(fecha?.getTime())
+      };
+    });
+  }
+}
+
+// ── RENDER ──
+function render() {
+  if(!STATE.weekRef||!STATE.planBySemZone||!STATE.posZone||!STATE.acumRaw){
+    showStatus('Faltan datos','err'); return;
+  }
+
+  // Assign zone + semNum to each real count
+  const sortedRef=[...STATE.weekRef].sort((a,b)=>a.fecha-b.fecha);
+  function getSemNum(fecha){
+    // Igual que pandas merge_asof direction='backward': última semana cuya fecha <= fecha del conteo
+    let s=null;
+    for(let i=0;i<sortedRef.length;i++){
+      if(sortedRef[i].fecha<=fecha) s=sortedRef[i].semNum;
+    }
+    return s;
+  }
+
+  const realBySemZone={};
+  let matchCount=0, noZona=0, noSem=0;
+  STATE.acumRaw.forEach(r=>{
+    const zona=STATE.posZone[r.posicion];
+    if(!zona){ noZona++; return; }
+    const semNum=getSemNum(r.fecha);
+    if(!semNum){ noSem++; return; }
+    matchCount++;
+    if(!realBySemZone[zona])realBySemZone[zona]={};
+    if(!realBySemZone[zona][semNum])realBySemZone[zona][semNum]=0;
+    realBySemZone[zona][semNum]++;
+  });
+  STATE.realBySemZone=realBySemZone;
+  const diagEl=document.getElementById('diagMsg');
+  if(diagEl){
+    diagEl.innerHTML=`<strong>Diagnóstico:</strong> ${STATE.acumRaw.length.toLocaleString('es')} filas en acumulado → <span style="color:var(--ok)">${matchCount.toLocaleString('es')} con zona asignada</span> · ${noZona.toLocaleString('es')} sin zona · ${noSem} sin semana`;
+    diagEl.style.display='block';
+  }
+
+  // Current week
+  const today=new Date();
+  let curSem=sortedRef[sortedRef.length-1].semNum;
+  for(let i=0;i<sortedRef.length;i++){
+    if(!sortedRef[i+1]||today<sortedRef[i+1].fecha){
+      if(today>=sortedRef[i].fecha){curSem=sortedRef[i].semNum;break;}
+    }
+  }
+  STATE.curSem=curSem;
+
+  const weekLbl='S'+String(curSem).padStart(2,'0');
+  document.getElementById('weekLbl').textContent=weekLbl;
+  document.getElementById('semLbl').textContent=weekLbl;
+  document.getElementById('dateLbl').textContent=today.toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  const allZones=Object.keys(STATE.planBySemZone);
+  function getCum(bsz,zona,upTo){
+    let t=0;Object.entries(bsz[zona]||{}).forEach(([s,c])=>{if(parseInt(s)<=upTo)t+=c;});return t;
+  }
+  const zoneTotals={};
+  allZones.forEach(z=>{zoneTotals[z]=Object.values(STATE.planBySemZone[z]||{}).reduce((a,b)=>a+b,0);});
+
+  const rows=allZones.map(z=>({
+    zona:z,
+    total:zoneTotals[z],
+    planAcum:getCum(STATE.planBySemZone,z,curSem),
+    realAcum:getCum(realBySemZone,z,curSem),
+    vueltas:ZONA_VUELTAS[z]||1
+  })).map(r=>({...r, delta:r.realAcum-r.planAcum, pctPlan:r.planAcum>0?r.realAcum/r.planAcum:0, pctTotal:r.total>0?r.realAcum/r.total:0}))
+    .sort((a,b)=>b.total-a.total);
+
+  renderGlobalBanner(rows,curSem);
+  renderKPIs();
+  renderProjection();
+  renderStock();
+  renderKPITrend();
+  renderCIARelative();
+  renderRankings();
+  renderCards(rows,curSem);
+  renderTable(rows);
+  renderChart(allZones,curSem);
+  renderHeatmap(allZones,curSem);
+  renderFilters(allZones);
+
+  document.getElementById('dashboard').style.display='block';
+  document.getElementById('placeholder').style.display='none';
+  showStatus('✓ Datos procesados correctamente','ok');
+}
+
+function getCum(bsz,zona,upTo){
+  let t=0;Object.entries(bsz[zona]||{}).forEach(([s,c])=>{if(parseInt(s)<=upTo)t+=c;});return t;
+}
+
+
+
+const KPI_TARGETS = { Gross: 99.75, Net: 98.50, IRA: 95.00 };
+const KPI_TOLERANCE = 0.10; // amarillo si está dentro de este margen por debajo del target
+
+function kpiStatus(value, target) {
+  if (value >= target) return 'ok';
+  if (value >= target - KPI_TOLERANCE) return 'warn';
+  return 'danger';
+}
+
+function fmtPct(v) {
+  return (v * 100).toFixed(2) + '%';
+}
+
+function calcKPIs(rows) {
+  // rows: array of {fecha, sobrantes, faltantes, posSinDif, totalPos, teorico}
+  const totalTeorico   = rows.reduce((a, r) => a + r.teorico, 0);
+  const totalSobrantes = rows.reduce((a, r) => a + r.sobrantes, 0);
+  const totalFaltantes = rows.reduce((a, r) => a + r.faltantes, 0);
+  const totalSinDif    = rows.reduce((a, r) => a + r.posSinDif, 0);
+  const totalPos       = rows.reduce((a, r) => a + r.totalPos, 0);
+
+  // Definición contractual Southbay (nombres invertidos respecto al estándar):
+  // Gross = compensa sobrantes con faltantes (Net lógico)
+  // Net   = penaliza ambos lados            (Gross lógico)
+  const gross = totalTeorico > 0
+    ? (totalTeorico - Math.abs(totalSobrantes - totalFaltantes)) / totalTeorico
+    : null;
+  const net = totalTeorico > 0
+    ? (totalTeorico - (totalSobrantes + totalFaltantes)) / totalTeorico
+    : null;
+  const ira = totalPos > 0 ? totalSinDif / totalPos : null;
+
+  return { gross, net, ira, totalTeorico, totalSobrantes, totalFaltantes, totalSinDif, totalPos };
+}
+
+function buildDailyKPIRows(acumRaw) {
+  // Group by fecha: compute sobrantes/faltantes per posicion then aggregate
+  const byFecha = {};
+  acumRaw.forEach(r => {
+    const key = r.fecha.toISOString().slice(0, 10);
+    if (!byFecha[key]) byFecha[key] = [];
+    byFecha[key].push(r);
+  });
+
+  return Object.entries(byFecha).sort().map(([fechaStr, rows]) => {
+    // Sum Dif per posicion
+    const posDif = {};
+    rows.forEach(r => {
+      const k = r.posicion + '|' + (r.cia||'');
+      posDif[k] = (posDif[k] || 0) + (r.dif || 0);
+    });
+    const difs = Object.values(posDif);
+    const sobrantes   = difs.filter(d => d > 0).reduce((a, b) => a + b, 0);
+    const faltantes   = difs.filter(d => d < 0).reduce((a, b) => a + Math.abs(b), 0);
+    const posSinDif   = difs.filter(d => d === 0).length;
+    const totalPos    = difs.length;
+    const teorico     = rows.reduce((a, r) => a + (r.stock || 0), 0);
+
+    return { fechaStr, sobrantes, faltantes, posSinDif, totalPos, teorico };
+  });
+}
+
+function renderKPIs() {
+  if (!STATE.acumRaw || STATE.acumRaw.length === 0) return;
+
+  const dailyRows = buildDailyKPIRows(STATE.acumRaw);
+  const allDailyRows = dailyRows; // reference for cumulative calc inside forEach
+  const global    = calcKPIs(dailyRows);
+
+  // ── Global cards ──
+  const kpis = [
+    { id: 'Gross', value: global.gross, label: 'GROSS ACCURACY',
+      sub: `Sobrantes: ${global.totalSobrantes.toLocaleString('es')} · Faltantes: ${global.totalFaltantes.toLocaleString('es')}` },
+    { id: 'Net',   value: global.net,   label: 'NET ACCURACY',
+      sub: `Neto: ${(global.totalSobrantes - global.totalFaltantes).toLocaleString('es')} uds sobre ${global.totalTeorico.toLocaleString('es')} teórico` },
+    { id: 'IRA',   value: global.ira,   label: 'IRA (LOCATION ACCURACY)',
+      sub: `${global.totalSinDif.toLocaleString('es')} de ${global.totalPos.toLocaleString('es')} posiciones perfectas` },
+  ];
+
+  document.getElementById('kpiGlobalRow').innerHTML = kpis.map(k => {
+    const pct     = k.value !== null ? k.value * 100 : null;
+    const target  = KPI_TARGETS[k.id];
+    const status  = pct !== null ? kpiStatus(pct, target) : 'neutral';
+    const colorMap = { ok: 'var(--ok)', warn: 'var(--warn)', danger: 'var(--danger)', neutral: 'var(--muted)' };
+    const color   = colorMap[status];
+    const deltaVal = pct !== null ? (pct - target) : null;
+    const deltaStr = deltaVal !== null
+      ? (deltaVal >= 0 ? '+' : '') + deltaVal.toFixed(2) + 'pp'
+      : '–';
+
+    return `<div class="kpi-card" style="--kpi-color:${color}">
+      <div class="kpi-name">${k.label}</div>
+      <div class="kpi-value">${pct !== null ? pct.toFixed(2) + '%' : '–'}</div>
+      <div class="kpi-meta">
+        <span class="kpi-target">Target: ${target.toFixed(2)}%</span>
+        <span class="kpi-delta ${status}">${deltaStr}</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:6px">${k.sub}</div>
+    </div>`;
+  }).join('');
+
+  // ── Detail table: por día + subtotales por mes ──
+  // Group daily rows by month
+  const byMonth = {};
+  dailyRows.forEach(r => {
+    const mes = r.fechaStr.slice(0, 7); // YYYY-MM
+    if (!byMonth[mes]) byMonth[mes] = [];
+    byMonth[mes].push(r);
+  });
+
+  let html = `<thead><tr>
+    <th style="text-align:left">Fecha</th>
+    <th>Teórico</th><th>Sobrantes</th><th>Faltantes</th>
+    <th>Gross</th><th>Net</th>
+    <th>Pos. sin dif</th><th>Total pos.</th><th>IRA</th>
+    <th style="border-left:1px solid var(--border);color:var(--accent2)">Gross acum.</th>
+    <th style="color:var(--accent2)">Net acum.</th>
+    <th style="color:var(--accent2)">IRA acum.</th>
+  </tr></thead><tbody>`;
+
+  const monthNames = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  Object.entries(byMonth).sort().forEach(([mes, rows]) => {
+    const [yr, mo] = mes.split('-');
+    const mesLabel = monthNames[parseInt(mo)] + ' ' + yr;
+
+    rows.forEach(r => {
+      const kpi = calcKPIs([r]);
+      const gPct = kpi.gross !== null ? kpi.gross * 100 : null;
+      const nPct = kpi.net   !== null ? kpi.net   * 100 : null;
+      const iPct = kpi.ira   !== null ? kpi.ira   * 100 : null;
+      const gSt  = gPct !== null ? kpiStatus(gPct, KPI_TARGETS.Gross) : '';
+      const nSt  = nPct !== null ? kpiStatus(nPct, KPI_TARGETS.Net)   : '';
+      const iSt  = iPct !== null ? kpiStatus(iPct, KPI_TARGETS.IRA)   : '';
+
+      // Running cumulative up to this row
+      const cumKpi = calcKPIs(allDailyRows.slice(0, allDailyRows.indexOf(r) + 1));
+      const cgPct = cumKpi.gross !== null ? cumKpi.gross * 100 : null;
+      const cnPct = cumKpi.net   !== null ? cumKpi.net   * 100 : null;
+      const ciPct = cumKpi.ira   !== null ? cumKpi.ira   * 100 : null;
+      const cgSt  = cgPct !== null ? kpiStatus(cgPct, KPI_TARGETS.Gross) : '';
+      const cnSt  = cnPct !== null ? kpiStatus(cnPct, KPI_TARGETS.Net)   : '';
+      const ciSt  = ciPct !== null ? kpiStatus(ciPct, KPI_TARGETS.IRA)   : '';
+
+      // Format date nicely
+      const [y,m,d] = r.fechaStr.split('-');
+      const dateLabel = `${d}/${m}/${y}`;
+
+      html += `<tr>
+        <td>${dateLabel}</td>
+        <td>${r.teorico.toLocaleString('es')}</td>
+        <td>${r.sobrantes.toLocaleString('es')}</td>
+        <td>${r.faltantes.toLocaleString('es')}</td>
+        <td><span class="kv ${gSt}">${gPct !== null ? gPct.toFixed(2)+'%' : '–'}</span></td>
+        <td><span class="kv ${nSt}">${nPct !== null ? nPct.toFixed(2)+'%' : '–'}</span></td>
+        <td>${r.posSinDif.toLocaleString('es')}</td>
+        <td>${r.totalPos.toLocaleString('es')}</td>
+        <td><span class="kv ${iSt}">${iPct !== null ? iPct.toFixed(2)+'%' : '–'}</span></td>
+        <td style="border-left:1px solid var(--border)"><span class="kv ${cgSt}">${cgPct !== null ? cgPct.toFixed(2)+'%' : '–'}</span></td>
+        <td><span class="kv ${cnSt}">${cnPct !== null ? cnPct.toFixed(2)+'%' : '–'}</span></td>
+        <td><span class="kv ${ciSt}">${ciPct !== null ? ciPct.toFixed(2)+'%' : '–'}</span></td>
+      </tr>`;
+    });
+
+    // Subtotal del mes (promedio de los KPIs del mes)
+    const mKpi = calcKPIs(rows);
+    const mgPct = mKpi.gross !== null ? mKpi.gross * 100 : null;
+    const mnPct = mKpi.net   !== null ? mKpi.net   * 100 : null;
+    const miPct = mKpi.ira   !== null ? mKpi.ira   * 100 : null;
+    const mgSt  = mgPct !== null ? kpiStatus(mgPct, KPI_TARGETS.Gross) : '';
+    const mnSt  = mnPct !== null ? kpiStatus(mnPct, KPI_TARGETS.Net)   : '';
+    const miSt  = miPct !== null ? kpiStatus(miPct, KPI_TARGETS.IRA)   : '';
+
+    // Cumulative up to end of this month
+    const lastRowOfMonth = rows[rows.length - 1];
+    const cumUpToMonth = calcKPIs(allDailyRows.slice(0, allDailyRows.indexOf(lastRowOfMonth) + 1));
+    const cmgPct = cumUpToMonth.gross !== null ? cumUpToMonth.gross * 100 : null;
+    const cmnPct = cumUpToMonth.net   !== null ? cumUpToMonth.net   * 100 : null;
+    const cmiPct = cumUpToMonth.ira   !== null ? cumUpToMonth.ira   * 100 : null;
+    const cmgSt  = cmgPct !== null ? kpiStatus(cmgPct, KPI_TARGETS.Gross) : '';
+    const cmnSt  = cmnPct !== null ? kpiStatus(cmnPct, KPI_TARGETS.Net)   : '';
+    const cmiSt  = cmiPct !== null ? kpiStatus(cmiPct, KPI_TARGETS.IRA)   : '';
+
+    html += `<tr class="subtotal">
+      <td>▶ ${mesLabel}</td>
+      <td>${mKpi.totalTeorico.toLocaleString('es')}</td>
+      <td>${mKpi.totalSobrantes.toLocaleString('es')}</td>
+      <td>${mKpi.totalFaltantes.toLocaleString('es')}</td>
+      <td><span class="kv ${mgSt}">${mgPct !== null ? mgPct.toFixed(2)+'%' : '–'}</span></td>
+      <td><span class="kv ${mnSt}">${mnPct !== null ? mnPct.toFixed(2)+'%' : '–'}</span></td>
+      <td>${mKpi.totalSinDif.toLocaleString('es')}</td>
+      <td>${mKpi.totalPos.toLocaleString('es')}</td>
+      <td><span class="kv ${miSt}">${miPct !== null ? miPct.toFixed(2)+'%' : '–'}</span></td>
+      <td style="border-left:1px solid var(--border)"><span class="kv ${cmgSt}">${cmgPct !== null ? cmgPct.toFixed(2)+'%' : '–'}</span></td>
+      <td><span class="kv ${cmnSt}">${cmnPct !== null ? cmnPct.toFixed(2)+'%' : '–'}</span></td>
+      <td><span class="kv ${cmiSt}">${cmiPct !== null ? cmiPct.toFixed(2)+'%' : '–'}</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody>';
+  document.getElementById('kpiDetailTbl').innerHTML = html;
+}
+
+function toggleKpiDetail() {
+  const detail = document.getElementById('kpiDetail');
+  const btn    = document.getElementById('kpiToggleBtn');
+  const open   = detail.classList.toggle('open');
+  btn.textContent = open ? '▲ Ocultar detalle' : '▼ Ver detalle por día / mes';
+}
+
+
+function renderRankings() {
+  if (!STATE.acumRaw || STATE.acumRaw.length === 0) return;
+
+  // Aggregate by CIA
+  const byCia = {}, byZona = {}, byPasillo = {};
+  STATE.acumRaw.forEach(r => {
+    const absDif = Math.abs(r.dif || 0);
+    const sob    = (r.dif || 0) > 0 ? (r.dif || 0) : 0;
+    const fal    = (r.dif || 0) < 0 ? Math.abs(r.dif || 0) : 0;
+    const cia    = r.cia || '–';
+    const zona   = STATE.posZone ? (STATE.posZone[r.posicion] || '–') : '–';
+    const pas    = r.posicion ? String(r.posicion).slice(0, 4) : '–';
+
+    [
+      [byCia,     cia],
+      [byZona,    zona],
+      [byPasillo, pas],
+    ].forEach(([obj, key]) => {
+      if (!obj[key]) obj[key] = { absDif: 0, sob: 0, fal: 0 };
+      obj[key].absDif += absDif;
+      obj[key].sob    += sob;
+      obj[key].fal    += fal;
+    });
+  });
+
+  function toSorted(obj, topN) {
+    return Object.entries(obj)
+      .map(([k, v]) => ({ name: k, ...v }))
+      .filter(r => r.absDif > 0)
+      .sort((a, b) => b.absDif - a.absDif)
+      .slice(0, topN);
+  }
+
+  const ciaRows     = toSorted(byCia,     10);
+  const zonaRows    = toSorted(byZona,    10);
+  const pasilloRows = toSorted(byPasillo, 10);
+
+  function buildCard(title, sub, rows) {
+    if (rows.length === 0) return `<div class="ranking-card"><div class="ranking-card-hdr"><span class="ranking-card-title">${title}</span></div><div style="padding:20px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center">Sin diferencias</div></div>`;
+    const max = rows[0].absDif;
+    const items = rows.map((r, i) => `
+      <div class="ranking-row">
+        <span class="rank-pos">${i + 1}</span>
+        <span class="rank-name">${r.name}</span>
+        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${max > 0 ? (r.absDif/max*100).toFixed(1) : 0}%"></div></div>
+        <div class="rank-vals">
+          <div class="rank-total">${r.absDif.toLocaleString('es')} uds</div>
+          <div class="rank-detail">+${r.sob.toLocaleString('es')} / -${r.fal.toLocaleString('es')}</div>
+        </div>
+      </div>`).join('');
+    return `<div class="ranking-card">
+      <div class="ranking-card-hdr">
+        <span class="ranking-card-title">${title}</span>
+        <span class="ranking-card-sub">${sub}</span>
+      </div>
+      ${items}
+    </div>`;
+  }
+
+  // Override pasillo card to include recurrence badges
+  function buildPasilloCard(rows, reincMap) {
+    if (rows.length === 0) return buildCard('Por pasillo', 'top 10', []);
+    const max = rows[0].absDif;
+    const items = rows.map((r, i) => {
+      const cycs = reincMap[r.name] || 1;
+      const badgeCls = cycs >= 3 ? 'reinc-3' : cycs === 2 ? 'reinc-2' : 'reinc-1';
+      const badgeTip = cycs === 1 ? '1 CYC' : `${cycs} CYCs`;
+      return `<div class="ranking-row">
+        <span class="rank-pos">${i+1}</span>
+        <span class="rank-name">${r.name}</span>
+        <span class="reinc-badge ${badgeCls}" title="Apareció en ${badgeTip} con diferencias">${cycs}x</span>
+        <div class="rank-bar-wrap"><div class="rank-bar" style="width:${max>0?(r.absDif/max*100).toFixed(1):0}%"></div></div>
+        <div class="rank-vals">
+          <div class="rank-total">${r.absDif.toLocaleString('es')} uds</div>
+          <div class="rank-detail">+${r.sob.toLocaleString('es')} / -${r.fal.toLocaleString('es')}</div>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="ranking-card">
+      <div class="ranking-card-hdr">
+        <span class="ranking-card-title">Por pasillo</span>
+        <span class="ranking-card-sub">top 10 · Nx = reincidencia</span>
+      </div>
+      ${items}
+    </div>`
+  }
+
+  const reincMap = buildReincidencia();
+  document.getElementById('rankingsGrid').innerHTML =
+    buildCard('Por CIA',    'todas las compañías',      ciaRows)  +
+    buildCard('Por WHSEID', 'zona / tipo de ubicación', zonaRows) +
+    buildPasilloCard(pasilloRows, reincMap);
+
+  // Recurrence tip
+  const reinc2 = Object.entries(reincMap).filter(([,v])=>v>=2).length;
+  const reinc3 = Object.entries(reincMap).filter(([,v])=>v>=3).length;
+  const tipEl = document.getElementById('reincTip');
+  if (tipEl) tipEl.innerHTML = `<strong>Observaciones:</strong> La reincidencia (badge Nx) indica cuántos conteos distintos tuvo diferencias ese pasillo. <span style="color:var(--warn)">Amarillo = 2 conteos con error</span>, <span style="color:var(--danger)">rojo = 3 o más</span>. ${reinc2 > 0 ? `<strong>${reinc2} pasillos</strong> tuvieron errores en más de un conteo` : 'Por ahora todos los errores son en un único conteo'}${reinc3 > 0 ? ` y <strong>${reinc3}</strong> ya superaron los 3 conteos con diferencias — requieren atención inmediata` : ''}. Un pasillo que falla una vez puede ser un error puntual; uno que falla repetidamente sugiere un problema estructural (ubicación mal configurada, picking incorrecto, producto habitualmente mal ubicado).`;
+}
+
+
+// ── KPI TREND ──
+function renderKPITrend() {
+  if (!STATE.acumRaw || !STATE.weekRef) return;
+
+  const sortedRef = [...STATE.weekRef].sort((a,b) => a.fecha - b.fecha);
+  function getSemNum(fecha) {
+    let s = null;
+    for (let i = 0; i < sortedRef.length; i++) {
+      if (sortedRef[i].fecha <= fecha) s = sortedRef[i].semNum;
+    }
+    return s;
+  }
+
+  // Group acum by semana
+  const bySem = {};
+  STATE.acumRaw.forEach(r => {
+    const s = getSemNum(r.fecha);
+    if (!s) return;
+    if (!bySem[s]) bySem[s] = [];
+    bySem[s].push(r);
+  });
+
+  const semNums = Object.keys(bySem).map(Number).sort((a,b)=>a-b);
+  const labels  = semNums.map(s => 'S' + String(s).padStart(2,'0'));
+
+  // Rolling cumulative KPIs
+  let cumRows = [];
+  const grossSeries = [], netSeries = [], iraSeries = [];
+
+  semNums.forEach(s => {
+    cumRows = cumRows.concat(bySem[s]);
+    // calc KPIs on cumRows
+    const posDif = {};
+    cumRows.forEach(r => {
+      const k = r.posicion + '|' + (r.cia||'');
+      posDif[k] = (posDif[k]||0) + (r.dif||0);
+    });
+    const difs = Object.values(posDif);
+    const sob = difs.filter(d=>d>0).reduce((a,b)=>a+b,0);
+    const fal = difs.filter(d=>d<0).reduce((a,b)=>a+Math.abs(b),0);
+    const teo = cumRows.reduce((a,r)=>a+(r.stock||0),0);
+    const sinDif = difs.filter(d=>d===0).length;
+    const totPos = difs.length;
+
+    grossSeries.push(teo > 0 ? (teo - Math.abs(sob-fal)) / teo * 100 : null);
+    netSeries.push(  teo > 0 ? (teo - (sob+fal))         / teo * 100 : null);
+    iraSeries.push(  totPos > 0 ? sinDif / totPos * 100 : null);
+  });
+
+  if (STATE.trendChart) STATE.trendChart.destroy();
+  const ctx = document.getElementById('kpiTrendChart').getContext('2d');
+
+  const targetLines = (target, color) => ({
+    type: 'line',
+    data: labels.map(() => target),
+    borderColor: color + '33',
+    borderWidth: 1,
+    borderDash: [3, 4],
+    pointRadius: 0,
+    tension: 0,
+    fill: false,
+  });
+
+  STATE.trendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        targetLines(KPI_TARGETS.Gross, '#00d4aa'),
+        targetLines(KPI_TARGETS.Net,   '#4d9fff'),
+        targetLines(KPI_TARGETS.IRA,   '#ffb84d'),
+        { label:'Gross', data: grossSeries, borderColor:'#00d4aa', backgroundColor:'rgba(0,212,170,.06)', borderWidth:2, pointRadius:3, pointHoverRadius:6, tension:.3, fill:false },
+        { label:'Net',   data: netSeries,   borderColor:'#4d9fff', backgroundColor:'rgba(77,159,255,.06)',  borderWidth:2, pointRadius:3, pointHoverRadius:6, tension:.3, fill:false },
+        { label:'IRA',   data: iraSeries,   borderColor:'#ffb84d', backgroundColor:'rgba(255,184,77,.06)',  borderWidth:2, pointRadius:3, pointHoverRadius:6, tension:.3, fill:false },
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#1e2029', borderColor:'#2a2d3a', borderWidth:1,
+          titleColor:'#9399a8', bodyColor:'#e8eaf0',
+          titleFont:{family:'IBM Plex Mono',size:10},
+          bodyFont:{family:'IBM Plex Mono',size:11},
+          callbacks: {
+            label: ctx => {
+              if (ctx.datasetIndex < 3) return null; // skip target lines
+              return ` ${ctx.dataset.label}: ${ctx.raw !== null ? ctx.raw.toFixed(4)+'%' : '–'}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid:{color:'#1e2029'}, ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10}} },
+        y: {
+          grid:{color:'#1e2029'},
+          ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10}, callback: v => v.toFixed(2)+'%'},
+          min: Math.max(0, Math.min(...[...grossSeries,...netSeries,...iraSeries].filter(v=>v!==null)) - 0.1),
+        }
+      }
+    }
+  });
+
+  // Tip
+  const last = grossSeries.length - 1;
+  const gTrend = last > 0 ? grossSeries[last] - grossSeries[last-1] : 0;
+  const iTrend = last > 0 ? iraSeries[last]   - iraSeries[last-1]   : 0;
+  const trendTxt = gTrend >= 0
+    ? '📈 Gross está <strong>mejorando</strong> semana a semana'
+    : '📉 Gross está <strong>cayendo</strong> — revisar calidad de conteo reciente';
+  const iraTxt = iTrend >= 0
+    ? 'IRA en tendencia positiva'
+    : 'IRA cayendo — más posiciones con diferencia en las últimas semanas';
+  document.getElementById('kpiTrendTip').innerHTML =
+    `<strong>Observaciones:</strong> Este gráfico muestra si la operación mejora o empeora con el tiempo, independientemente de si los valores están por encima del target. ${trendTxt}. ${iraTxt}. Una caída sostenida aunque sobre el target es una señal de alerta temprana.`;
+}
+
+// ── CIA RELATIVE ERROR ──
+function renderCIARelative() {
+  if (!STATE.acumRaw) return;
+
+  const byCia = {};
+  STATE.acumRaw.forEach(r => {
+    const cia = r.cia || '–';
+    if (!byCia[cia]) byCia[cia] = { teo:0, sob:0, fal:0, posDif:{} };
+    byCia[cia].teo += (r.stock||0);
+    const k = r.posicion;
+    byCia[cia].posDif[k] = (byCia[cia].posDif[k]||0) + (r.dif||0);
+  });
+
+  const ciaRows = Object.entries(byCia).map(([cia, d]) => {
+    const difs = Object.values(d.posDif);
+    const sob  = difs.filter(v=>v>0).reduce((a,b)=>a+b,0);
+    const fal  = difs.filter(v=>v<0).reduce((a,b)=>a+Math.abs(b),0);
+    const absErr = sob + fal;
+    const pctErr = d.teo > 0 ? absErr / d.teo * 100 : 0;
+    const gross  = d.teo > 0 ? (d.teo - Math.abs(sob-fal)) / d.teo * 100 : null;
+    const net    = d.teo > 0 ? (d.teo - (sob+fal))         / d.teo * 100 : null;
+    return { cia, teo: d.teo, sob, fal, absErr, pctErr, gross, net };
+  }).sort((a,b) => b.pctErr - a.pctErr);
+
+  const maxErr = Math.max(...ciaRows.map(r => r.pctErr), 0.001);
+  const ciaColors = { FTW:'#4d9fff', APP:'#00d4aa', EQP:'#ffb84d' };
+
+  function errRateColor(p) {
+    if (p < 0.01) return 'var(--ok)';
+    if (p < 0.05) return 'var(--dim)';
+    if (p < 0.10) return 'var(--warn)';
+    return 'var(--danger)';
+  }
+  function errRateLabel(p) {
+    if (p < 0.01) return '● Excelente';
+    if (p < 0.05) return '● Normal';
+    if (p < 0.10) return '● Atención';
+    return '● Alerta';
+  }
+  const stColor = { ok:'var(--ok)', warn:'var(--warn)', danger:'var(--danger)' };
+
+  document.getElementById('ciaRelGrid').innerHTML = ciaRows.map(function(r) {
+    var col    = ciaColors[r.cia] || '#888';
+    var gSt    = r.gross !== null ? kpiStatus(r.gross, KPI_TARGETS.Gross) : '';
+    var nSt    = r.net   !== null ? kpiStatus(r.net,   KPI_TARGETS.Net)   : '';
+    var eColor = errRateColor(r.pctErr);
+    var eLabel = errRateLabel(r.pctErr);
+    var barW   = (r.pctErr / maxErr * 100).toFixed(1);
+    var grossVal = r.gross !== null ? r.gross.toFixed(4) + '%' : '–';
+    var netVal   = r.net   !== null ? r.net.toFixed(4)   + '%' : '–';
+    var gColor = stColor[gSt] || 'var(--text)';
+    var nColor = stColor[nSt] || 'var(--text)';
+    return '<div class="cia-rel-card">'
+      + '<div class="cia-rel-name" style="color:' + col + '">' + r.cia + ' <span>' + r.teo.toLocaleString('es') + ' uds teóricas</span></div>'
+      + '<div class="cia-err-bar"><div class="cia-err-fill" style="width:' + barW + '%;background:' + col + '"></div></div>'
+      + '<div class="cia-rel-row"><span class="cia-rel-lbl">Tasa de error</span><span style="color:' + eColor + ';font-weight:600">' + r.pctErr.toFixed(4) + '% <span style="font-size:9px;font-weight:400">' + eLabel + '</span></span></div>'
+      + '<div class="cia-rel-row"><span class="cia-rel-lbl">Sobrantes / Faltantes</span><span style="color:var(--dim)">+' + r.sob + ' / -' + r.fal + '</span></div>'
+      + '<div class="cia-rel-row"><span class="cia-rel-lbl">Gross</span><span style="color:' + gColor + '">' + grossVal + '</span></div>'
+      + '<div class="cia-rel-row"><span class="cia-rel-lbl">Net</span><span style="color:' + nColor + '">' + netVal + '</span></div>'
+      + '</div>';
+  }).join('');
+
+  // Tip
+  const worst = ciaRows[0];
+  const best  = ciaRows[ciaRows.length-1];
+  document.getElementById('ciaTip').innerHTML =
+    `<strong>Observaciones:</strong> El error absoluto no alcanza — <strong>FTW tiene más volumen que EQP</strong>, entonces naturalmente acumula más diferencias. La tasa de error (% sobre su propio teórico) nivela el campo: si <strong>${worst.cia}</strong> tiene la tasa más alta, significa que proporcionalmente es la operación con mayor imprecisión, independientemente del volumen. Esto permite comparar CIAs en igualdad de condiciones y focalizar acciones correctivas donde realmente hay un problema de calidad.`;
+}
+
+// ── RECURRENCE (patch renderRankings to add recurrence data) ──
+function buildReincidencia() {
+  if (!STATE.acumRaw) return {};
+  // Count distinct CYCs with |Dif|>0 per pasillo
+  const pasCyc = {};
+  STATE.acumRaw.forEach(r => {
+    if ((r.dif||0) === 0) return;
+    const pas = r.posicion ? String(r.posicion).slice(0,4) : '–';
+    const cyc = r.cyc || '?';
+    if (!pasCyc[pas]) pasCyc[pas] = new Set();
+    pasCyc[pas].add(cyc);
+  });
+  const result = {};
+  Object.entries(pasCyc).forEach(([p, s]) => result[p] = s.size);
+  return result;
+}
+
+
+function renderProjection() {
+  if (!STATE.acumRaw || !STATE.weekRef || !STATE.planBySemZone) return;
+
+  const today    = new Date();
+  const twoWeeks = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+  // Zone totals from plan
+  const zoneTotals = {};
+  Object.entries(STATE.planBySemZone).forEach(([zona, semMap]) => {
+    zoneTotals[zona] = Object.values(semMap).reduce((a,b)=>a+b,0);
+  });
+
+  // Already counted per zone (all time)
+  const contadoTotal = {};
+  STATE.acumRaw.forEach(r => {
+    const zona = STATE.posZone ? (STATE.posZone[r.posicion] || null) : null;
+    if (!zona) return;
+    contadoTotal[zona] = (contadoTotal[zona] || 0) + 1;
+  });
+
+  // Daily counts per zone in last 2 weeks
+  const recentByDayZona = {};
+  STATE.acumRaw.forEach(r => {
+    if (r.fecha < twoWeeks) return;
+    const zona = STATE.posZone ? (STATE.posZone[r.posicion] || null) : null;
+    if (!zona) return;
+    const dayKey = r.fecha.toISOString().slice(0,10);
+    const key = zona + '|' + dayKey;
+    recentByDayZona[key] = (recentByDayZona[key] || 0) + 1;
+  });
+
+  // Unique days in last 2 weeks with any activity
+  const recentDays = new Set(Object.keys(recentByDayZona).map(k => k.split('|')[1]));
+  const nDays = recentDays.size || 1;
+
+  // Daily rate per zone
+  const dailyRate = {};
+  Object.entries(recentByDayZona).forEach(([key, cnt]) => {
+    const zona = key.split('|')[0];
+    dailyRate[zona] = (dailyRate[zona] || 0) + cnt;
+  });
+  Object.keys(dailyRate).forEach(z => dailyRate[z] /= nDays);
+
+  // End of year
+  const endOfYear = new Date('2026-12-31');
+  const msPerDay  = 24 * 60 * 60 * 1000;
+  const diasRestantes = Math.round((endOfYear - today) / msPerDay);
+
+  const allZones = Object.keys(zoneTotals);
+  const ZONA_COLORS_LOCAL = {
+    'Mezzanine':'#4d9fff','Picking Pallet':'#00d4aa','Rack':'#ffb84d',
+    'Baldas Cajas':'#c084fc','Baldas de unidades':'#fb923c'
+  };
+
+  let atRiskZones = [], onTrackZones = [];
+
+  const cards = allZones.sort((a,b) => (zoneTotals[b]||0)-(zoneTotals[a]||0)).map(zona => {
+    const total    = zoneTotals[zona] || 0;
+    const contado  = contadoTotal[zona] || 0;
+    const restante = Math.max(0, total - contado);
+    const pct      = total > 0 ? contado / total * 100 : 0;
+    const color    = ZONA_COLORS_LOCAL[zona] || '#888';
+    const rate     = dailyRate[zona] || 0;
+
+    if (rate === 0) {
+      return '<div class="proj-card" style="--proj-color:var(--muted)">'
+        + '<div class="proj-zona" style="color:var(--muted)">' + zona + '<small>sin actividad reciente</small></div>'
+        + '<div class="proj-inactive">Sin datos en las últimas 2 semanas</div>'
+        + '</div>';
+    }
+
+    const diasNecesarios = Math.ceil(restante / rate);
+    const fechaCierre    = new Date(today.getTime() + diasNecesarios * msPerDay);
+    const onTime         = fechaCierre <= endOfYear;
+    const statusClass    = onTime ? 'proj-status-ok' : 'proj-status-danger';
+
+    if (onTime) onTrackZones.push(zona); else atRiskZones.push(zona);
+
+    const fechaStr = fechaCierre.toLocaleDateString('es-AR', {day:'2-digit',month:'short',year:'numeric'});
+    const diasLabel = onTime
+      ? (diasRestantes - diasNecesarios) + ' días de margen'
+      : (diasNecesarios - diasRestantes) + ' días de rezago';
+
+    return '<div class="proj-card" style="--proj-color:' + color + '">'
+      + '<div class="proj-zona" style="color:' + color + '">' + zona + '<small>' + pct.toFixed(1) + '% completado · ' + restante.toLocaleString('es') + ' restantes</small></div>'
+      + '<div class="proj-bar-wrap"><div class="proj-bar" style="width:' + Math.min(pct,100).toFixed(1) + '%;background:' + color + '"></div></div>'
+      + '<div class="proj-row"><span>Ritmo actual</span><strong>' + rate.toFixed(0) + ' pos/día</strong></div>'
+      + '<div class="proj-row"><span>Días necesarios</span><strong>' + diasNecesarios.toLocaleString('es') + ' días</strong></div>'
+      + '<div class="proj-date ' + statusClass + '">'
+        + (onTime ? '✓ ' : '⚠ ') + fechaStr
+        + '<small>' + diasLabel + '</small>'
+      + '</div>'
+      + '</div>';
+  });
+
+  document.getElementById('projGrid').innerHTML = cards.join('');
+
+  // Tip
+  let tipTxt = '<strong>Observaciones:</strong> La proyección se calcula dividiendo las posiciones restantes por el ritmo promedio de las últimas 2 semanas (' + nDays + ' días hábiles). ';
+  if (atRiskZones.length === 0) {
+    tipTxt += 'Al ritmo actual, <strong>todas las zonas cierran dentro del año</strong>. ';
+  } else {
+    tipTxt += '<strong>' + atRiskZones.join(', ') + '</strong> no llegan a completarse al ritmo actual — requieren acelerar el conteo o renegociar el plan. ';
+  }
+  tipTxt += 'Si el ritmo cambia (más o menos personal, cambios en el plan), actualizá el acumulado y la proyección se recalcula automáticamente.';
+  document.getElementById('projTip').innerHTML = tipTxt;
+}
+
+
+// ── STOCK FILE HANDLER ──
+document.getElementById('stockFile').addEventListener('change', e => {
+  if (e.target.files[0]) {
+    document.getElementById('stockBtn').textContent = '✓ ' + e.target.files[0].name;
+    document.getElementById('stockBtn').classList.add('loaded');
+  }
+});
+
+function parseStock(wb) {
+  const shName = wb.SheetNames.find(n => /export/i.test(n)) || wb.SheetNames[0];
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[shName], {defval:''});
+  const WH_CATS = ['Mezzanine','Rack','Picking FTW','Picking EQP'];
+
+  STATE.stockRaw = rows
+    .filter(r => WH_CATS.includes(r['Categoría Ubic.'] || r['Categoria Ubic.'] || ''))
+    .map(r => ({
+      posicion:  String(r['Ubicación'] || r['Ubicacion'] || '').trim(),
+      skuNike:   String(r['SKU Nike']  || '').trim(),
+      cantidad:  Number(r['Cantidad']  || 0),
+      categoria: String(r['Categoría Ubic.'] || r['Categoria Ubic.'] || ''),
+      cia:       String(r['Cía'] || r['Cia'] || r['CIA'] || ''),
+    }))
+    .filter(r => r.posicion && r.posicion !== '');
+}
+
+// ── RENDER STOCK ──
+function renderStock() {
+  if (!STATE.stockRaw || STATE.stockRaw.length === 0) return;
+  if (!STATE.acumRaw  || STATE.acumRaw.length  === 0) return;
+
+  const today = new Date();
+
+  // Stock por posición (suma cantidades, modo de SKU)
+  const stockByPos = {};
+  STATE.stockRaw.forEach(r => {
+    if (!stockByPos[r.posicion]) stockByPos[r.posicion] = { qty:0, skus:{}, categoria:r.categoria, cia:r.cia };
+    stockByPos[r.posicion].qty += r.cantidad;
+    stockByPos[r.posicion].skus[r.skuNike] = (stockByPos[r.posicion].skus[r.skuNike]||0) + r.cantidad;
+  });
+  // Get dominant SKU per position
+  Object.values(stockByPos).forEach(p => {
+    p.sku = Object.entries(p.skus).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+  });
+
+  // Last conteo per position from acumRaw
+  const lastConteo = {};
+  STATE.acumRaw.forEach(r => {
+    const key = r.posicion;
+    if (!lastConteo[key] || r.fecha > lastConteo[key].fecha) {
+      lastConteo[key] = { fecha: r.fecha, sku: r.sku || '', qty: r.fisico };
+    }
+  });
+
+  // ── Coverage ──
+  const allStockPos   = Object.keys(stockByPos).filter(p => stockByPos[p].qty > 0);
+  const countedPos    = allStockPos.filter(p => lastConteo[p]);
+  const uncountedPos  = allStockPos.filter(p => !lastConteo[p]);
+  const totalStockQty    = allStockPos.reduce((a,p)   => a + stockByPos[p].qty, 0);
+  const countedStockQty  = countedPos.reduce((a,p)    => a + stockByPos[p].qty, 0);
+  const uncountedStockQty= uncountedPos.reduce((a,p)  => a + stockByPos[p].qty, 0);
+  const coveragePct = totalStockQty > 0 ? countedStockQty / totalStockQty * 100 : 0;
+
+  // ── Stock sin contar por zona ──
+  const uncountedByZona = {};
+  uncountedPos.forEach(p => {
+    const cat = stockByPos[p].categoria;
+    if (!uncountedByZona[cat]) uncountedByZona[cat] = 0;
+    uncountedByZona[cat] += stockByPos[p].qty;
+  });
+
+  // ── Inmovilizados ──
+  const msPerDay = 24*60*60*1000;
+  const inmovilizados = [];
+  countedPos.forEach(p => {
+    const stock = stockByPos[p];
+    const conteo = lastConteo[p];
+    const dias = Math.round((today - conteo.fecha) / msPerDay);
+    const mismoSKU = stock.sku === conteo.sku;
+    const mismaQty = stock.qty === conteo.qty;
+    if (mismoSKU && mismaQty && dias >= 30) {
+      inmovilizados.push({ posicion:p, cia:stock.cia, categoria:stock.categoria, sku:stock.sku, qty:stock.qty, dias, fecha:conteo.fecha });
+    }
+  });
+
+  const inmQty = inmovilizados.reduce((a,r)=>a+r.qty,0);
+  const inmPos = inmovilizados.length;
+
+  // ── Summary cards ──
+  const stockCardData = [
+    { lbl:'Posiciones con stock',    val: allStockPos.length.toLocaleString('es'),    sub: totalStockQty.toLocaleString('es')+' uds totales',           c:'var(--accent2)' },
+    { lbl:'Posiciones contadas',     val: countedPos.length.toLocaleString('es'),     sub: countedStockQty.toLocaleString('es')+' uds · '+coveragePct.toFixed(1)+'% del stock', c:'var(--ok)' },
+    { lbl:'Sin contar (con stock)',  val: uncountedPos.length.toLocaleString('es'),   sub: uncountedStockQty.toLocaleString('es')+' uds en riesgo',      c: uncountedStockQty > countedStockQty ? 'var(--danger)' : 'var(--warn)' },
+    { lbl:'Stock inmovilizado ≥30d', val: inmPos.toLocaleString('es')+' pos.',        sub: inmQty.toLocaleString('es')+' uds sin movimiento',            c:'var(--warn)' },
+  ];
+
+  document.getElementById('stockCards').innerHTML = stockCardData.map(c =>
+    '<div class="card" style="--c:'+c.c+'">'
+    + '<div class="card-lbl">'+c.lbl+'</div>'
+    + '<div class="card-val">'+c.val+'</div>'
+    + '<div class="card-sub">'+c.sub+'</div>'
+    + '</div>'
+  ).join('');
+
+  // ── Chart 1: sin contar por zona ──
+  const zonaLabels = Object.keys(uncountedByZona);
+  const zonaVals   = zonaLabels.map(z => uncountedByZona[z]);
+  const zonaColors = zonaLabels.map(z =>
+    z.includes('Rack') ? '#ffb84d' : z.includes('Picking') ? '#00d4aa' : z.includes('Mezzanine') ? '#4d9fff' : '#c084fc'
+  );
+  if (STATE.stockZonaChart) STATE.stockZonaChart.destroy();
+  STATE.stockZonaChart = new Chart(document.getElementById('stockZonaChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels: zonaLabels, datasets: [{ data: zonaVals, backgroundColor: zonaColors, borderRadius: 4 }] },
+    options: {
+      responsive:true, plugins:{ legend:{display:false},
+        tooltip:{ backgroundColor:'#1e2029',borderColor:'#2a2d3a',borderWidth:1,titleColor:'#9399a8',bodyColor:'#e8eaf0',
+          titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11},
+          callbacks:{ label: ctx => ' '+ctx.raw.toLocaleString('es')+' uds' } } },
+      scales:{
+        x:{ grid:{color:'#1e2029'}, ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10}} },
+        y:{ grid:{color:'#1e2029'}, ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10}, callback: v => v>=1000?(v/1000).toFixed(0)+'k':v } }
+      }
+    }
+  });
+
+  // ── Chart 2: inmovilizados por antigüedad ──
+  const rangos = ['30-45 días','45-60 días','60-90 días','90+ días'];
+  const rangoQty = [0,0,0,0];
+  inmovilizados.forEach(r => {
+    if      (r.dias < 45) rangoQty[0] += r.qty;
+    else if (r.dias < 60) rangoQty[1] += r.qty;
+    else if (r.dias < 90) rangoQty[2] += r.qty;
+    else                  rangoQty[3] += r.qty;
+  });
+  const rangoColors = ['rgba(255,184,77,.8)','rgba(255,140,50,.8)','rgba(255,92,92,.7)','rgba(180,40,40,.9)'];
+  if (STATE.stockInmChart) STATE.stockInmChart.destroy();
+  STATE.stockInmChart = new Chart(document.getElementById('stockInmChart').getContext('2d'), {
+    type: 'bar',
+    data: { labels: rangos, datasets: [{ data: rangoQty, backgroundColor: rangoColors, borderRadius: 4 }] },
+    options: {
+      responsive:true, plugins:{ legend:{display:false},
+        tooltip:{ backgroundColor:'#1e2029',borderColor:'#2a2d3a',borderWidth:1,titleColor:'#9399a8',bodyColor:'#e8eaf0',
+          titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11},
+          callbacks:{ label: ctx => ' '+ctx.raw.toLocaleString('es')+' uds' } } },
+      scales:{
+        x:{ grid:{color:'#1e2029'}, ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10}} },
+        y:{ grid:{color:'#1e2029'}, ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10}, callback: v => v>=1000?(v/1000).toFixed(0)+'k':v } }
+      }
+    }
+  });
+
+  // ── Inmovilizados cards por CIA ──
+  const inmByCia = {};
+  inmovilizados.forEach(r => {
+    if (!inmByCia[r.cia]) inmByCia[r.cia] = { pos:0, qty:0, maxDias:0 };
+    inmByCia[r.cia].pos++;
+    inmByCia[r.cia].qty += r.qty;
+    inmByCia[r.cia].maxDias = Math.max(inmByCia[r.cia].maxDias, r.dias);
+  });
+  const ciaColors2 = { FTW:'#4d9fff', APP:'#00d4aa', EQP:'#ffb84d' };
+  populateInmDetail(inmovilizados);
+  document.getElementById('stockInmCards').innerHTML = Object.entries(inmByCia)
+    .sort((a,b)=>b[1].qty-a[1].qty)
+    .map(([cia, d]) => {
+      const col = ciaColors2[cia] || '#888';
+      return '<div class="cia-rel-card">'
+        + '<div class="cia-rel-name" style="color:'+col+'">'+cia+'<span>stock inmovilizado</span></div>'
+        + '<div class="cia-rel-row"><span class="cia-rel-lbl">Posiciones</span><strong>'+d.pos.toLocaleString('es')+'</strong></div>'
+        + '<div class="cia-rel-row"><span class="cia-rel-lbl">Unidades</span><strong style="color:'+col+'">'+d.qty.toLocaleString('es')+' uds</strong></div>'
+        + '<div class="cia-rel-row"><span class="cia-rel-lbl">Máx. antigüedad</span><strong>'+d.maxDias+' días</strong></div>'
+        + '</div>';
+    }).join('');
+
+  // ── Tip ──
+  const pctInm = totalStockQty > 0 ? inmQty/totalStockQty*100 : 0;
+  document.getElementById('stockTip').innerHTML =
+    '<strong>Observaciones:</strong> '
+    + 'De las '+allStockPos.length.toLocaleString('es')+' posiciones con stock, el <strong>'+coveragePct.toFixed(1)+'%</strong> fue contado '
+    + '— pero esas posiciones representan solo el <strong>'+( countedStockQty/totalStockQty*100).toFixed(1)+'%</strong> de las unidades totales. '
+    + 'Las <strong>'+uncountedPos.length.toLocaleString('es')+'</strong> posiciones sin contar concentran <strong>'+uncountedStockQty.toLocaleString('es')+' unidades</strong>. '
+    + 'Además, <strong>'+inmPos.toLocaleString('es')+' posiciones ('+inmQty.toLocaleString('es')+' uds, '+pctInm.toFixed(1)+'% del stock)</strong> '
+    + 'no tuvieron ningún movimiento en los últimos 30 días o más — candidatas a revisión de reubicación o liquidación.';
+
+  document.getElementById('stockSection').style.display = 'block';
+}
+
+
+// ── IMMOBILIZED DETAIL TABLE ──
+let _inmData = [];
+let _inmSort = { col:'dias', dir:-1 };
+
+function populateInmDetail(inmovilizados) {
+  _inmData = inmovilizados.map(r => ({
+    pasillo:  String(r.posicion).slice(0,4),
+    posicion: r.posicion,
+    cia:      r.cia,
+    sku:      r.sku,
+    qty:      r.qty,
+    fecha:    r.fecha,
+    dias:     r.dias
+  }));
+
+  // Populate CIA filter
+  const cias = [...new Set(_inmData.map(r=>r.cia))].sort();
+  const ciaFilter = document.getElementById('inmCiaFilter');
+  ciaFilter.innerHTML = '<option value="">Todas las CIAs</option>'
+    + cias.map(c => '<option value="'+c+'">'+c+'</option>').join('');
+
+  document.getElementById('inmCount').textContent = _inmData.length.toLocaleString('es') + ' posiciones';
+  document.getElementById('inmExportBtn').style.display = 'inline-block';
+  document.getElementById('inmCiaFilter').style.display = 'inline-block';
+  document.getElementById('inmDiasFilter').style.display = 'inline-block';
+
+  renderInmTable();
+}
+
+function getFilteredInmData() {
+  const ciaVal  = document.getElementById('inmCiaFilter')?.value  || '';
+  const diasVal = document.getElementById('inmDiasFilter')?.value || '';
+  return _inmData.filter(r => {
+    if (ciaVal && r.cia !== ciaVal) return false;
+    if (diasVal) {
+      const d = parseInt(diasVal);
+      if (d === 30  && !(r.dias >= 30 && r.dias < 45)) return false;
+      if (d === 45  && !(r.dias >= 45 && r.dias < 60)) return false;
+      if (d === 60  && !(r.dias >= 60 && r.dias < 90)) return false;
+      if (d === 90  && !(r.dias >= 90))                return false;
+    }
+    return true;
+  });
+}
+
+function renderInmTable() {
+  let data = getFilteredInmData();
+  const col = _inmSort.col, dir = _inmSort.dir;
+  data.sort((a,b) => {
+    let av = a[col], bv = b[col];
+    if (typeof av === 'string') return dir * av.localeCompare(bv);
+    return dir * (av - bv);
+  });
+
+  const ciaColors = { FTW:'#4d9fff', APP:'#00d4aa', EQP:'#ffb84d' };
+  document.getElementById('inmTblBody').innerHTML = data.map(r => {
+    const col   = ciaColors[r.cia] || '#888';
+    const dCls  = r.dias >= 90 ? 'dias-90' : r.dias >= 60 ? 'dias-60' : 'dias-30';
+    const fechaStr = r.fecha instanceof Date
+      ? r.fecha.toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric'})
+      : r.fecha;
+    return '<tr>'
+      + '<td style="color:var(--dim)">'+r.pasillo+'</td>'
+      + '<td style="font-weight:500">'+r.posicion+'</td>'
+      + '<td style="color:'+col+';font-weight:600">'+r.cia+'</td>'
+      + '<td style="color:var(--dim)">'+r.sku+'</td>'
+      + '<td style="text-align:right">'+r.qty.toLocaleString('es')+'</td>'
+      + '<td style="color:var(--muted)">'+fechaStr+'</td>'
+      + '<td style="text-align:right"><span class="dias-chip '+dCls+'">'+r.dias+'d</span></td>'
+      + '</tr>';
+  }).join('');
+
+  document.getElementById('inmCount').textContent =
+    data.length.toLocaleString('es') + ' de ' + _inmData.length.toLocaleString('es') + ' posiciones';
+}
+
+function sortInmTable(col) {
+  if (_inmSort.col === col) _inmSort.dir *= -1;
+  else { _inmSort.col = col; _inmSort.dir = -1; }
+  renderInmTable();
+}
+
+function filterInmTable() { renderInmTable(); }
+
+function toggleInmDetail() {
+  const detail = document.getElementById('inmDetail');
+  const btn    = document.getElementById('inmToggleBtn');
+  const open   = detail.classList.toggle('open');
+  btn.textContent = open ? '▲ Ocultar detalle' : '▼ Ver detalle de posiciones inmovilizadas';
+}
+
+function exportInmXLSX() {
+  const data = getFilteredInmData();
+  if (!data.length) return;
+
+  // Build CSV and trigger download (no external lib needed for simple export)
+  const headers = ['Pasillo','Posición','CIA','SKU','Cantidad','Fecha último conteo','Días inmovilizado'];
+  const rows = data.map(r => {
+    const fechaStr = r.fecha instanceof Date
+      ? r.fecha.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})
+      : r.fecha;
+    return [r.pasillo, r.posicion, r.cia, r.sku, r.qty, fechaStr, r.dias];
+  });
+
+  // Use SheetJS if available, else CSV
+  if (typeof XLSX !== 'undefined') {
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Inmovilizados');
+    // Column widths
+    ws['!cols'] = [10,14,8,22,10,18,14].map(w=>({wch:w}));
+    XLSX.writeFile(wb, 'Stock_Inmovilizado_Southbay.xlsx');
+  } else {
+    // Fallback CSV
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Stock_Inmovilizado_Southbay.csv';
+    a.click();
+  }
+}
+
+function renderGlobalBanner(rows, curSem) {
+  const totalReal  = rows.reduce((a,r) => a + r.realAcum, 0);
+  const totalPlan  = rows.reduce((a,r) => a + r.planAcum, 0);
+  const totalUni   = rows.reduce((a,r) => a + r.total, 0);
+
+  const pctAnio    = totalUni  > 0 ? (totalReal / totalUni  * 100) : 0;
+  const pctVsPlan  = totalPlan > 0 ? (totalReal / totalPlan * 100) : 0;
+  const delta      = totalReal - totalPlan;
+  const deltaStr   = delta >= 0
+    ? '+' + delta.toLocaleString('es') + ' sobre plan'
+    : delta.toLocaleString('es') + ' bajo plan';
+
+  document.getElementById('bannerPct').textContent       = pctAnio.toFixed(1) + '%';
+  document.getElementById('bannerMeta').textContent      =
+    totalReal.toLocaleString('es') + ' de ' + totalUni.toLocaleString('es') + ' posiciones planificadas en el año';
+  document.getElementById('bannerVsPlan').textContent    = pctVsPlan.toFixed(1) + '%';
+  document.getElementById('bannerVsPlanMeta').textContent = deltaStr;
+
+  // Bar widths — real and plan are both relative to total universe
+  const planPctOfUni = totalUni > 0 ? Math.min(totalPlan / totalUni * 100, 100) : 0;
+  const realPctOfUni = totalUni > 0 ? Math.min(totalReal / totalUni * 100, 100) : 0;
+
+  document.getElementById('bannerTrackPlan').style.width = planPctOfUni.toFixed(2) + '%';
+  document.getElementById('bannerTrackReal').style.width = realPctOfUni.toFixed(2) + '%';
+
+  // Color the vs-plan percentage
+  const el = document.getElementById('bannerVsPlan');
+  if (pctVsPlan >= 100) {
+    el.style.background = 'linear-gradient(90deg, var(--ok), var(--accent))';
+  } else if (pctVsPlan >= 80) {
+    el.style.background = 'none';
+    el.style.webkitTextFillColor = 'var(--warn)';
+  } else {
+    el.style.background = 'none';
+    el.style.webkitTextFillColor = 'var(--danger)';
+  }
+  el.style.webkitBackgroundClip = 'text';
+  el.style.backgroundClip = 'text';
+}
+function renderCards(rows,curSem){
+  const totalPlan=rows.reduce((a,r)=>a+r.planAcum,0);
+  const totalReal=rows.reduce((a,r)=>a+r.realAcum,0);
+  const delta=totalReal-totalPlan;
+  const pct=totalPlan>0?(totalReal/totalPlan*100).toFixed(1):'–';
+  const ok=rows.filter(r=>r.pctPlan>=.9).length;
+  const totalUni=rows.reduce((a,r)=>a+r.total,0);
+  const semData=STATE.weekRef.find(w=>w.semNum===curSem);
+
+  const cards=[
+    {lbl:'Conteos realizados',val:totalReal.toLocaleString('es'),sub:`de ${totalPlan.toLocaleString('es')} planificadas`,c:'var(--accent2)'},
+    {lbl:'Avance vs plan',val:pct+'%',sub:delta>=0?`+${delta.toLocaleString('es')} sobre plan`:`${delta.toLocaleString('es')} bajo plan`,c:delta>=0?'var(--ok)':'var(--danger)'},
+    {lbl:'Semana actual',val:'S'+String(curSem).padStart(2,'0'),sub:semData?.cuatrimestre||'',c:'var(--accent)'},
+    {lbl:'Zonas en plan',val:ok+'/'+rows.length,sub:'con ≥90% de avance',c:ok===rows.length?'var(--ok)':'var(--warn)'},
+    {lbl:'Universo anual',val:totalUni.toLocaleString('es'),sub:'posiciones · incluye vueltas',c:'var(--muted)'},
+  ];
+  document.getElementById('cards').innerHTML=cards.map(c=>`
+    <div class="card" style="--c:${c.c}">
+      <div class="card-lbl">${c.lbl}</div>
+      <div class="card-val">${c.val}</div>
+      <div class="card-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+function renderTable(rows){
+  document.getElementById('tbody').innerHTML=rows.map(r=>{
+    const col=ZONA_COLORS[r.zona]||'#888';
+    const planPct=r.total>0?(r.planAcum/r.total*100).toFixed(1):0;
+    const realPct=r.total>0?(r.realAcum/r.total*100).toFixed(1):0;
+    const vsPlan=(r.pctPlan*100);
+    let chipCls,chipTxt;
+    if(r.planAcum===0){chipCls='chip-neutral';chipTxt='SIN PLAN';}
+    else if(vsPlan>=100){chipCls='chip-ok';chipTxt='● EN PLAN';}
+    else if(vsPlan>=80){chipCls='chip-warn';chipTxt='◐ LEVE';}
+    else if(vsPlan>=50){chipCls='chip-warn';chipTxt='◑ MEDIO';}
+    else{chipCls='chip-danger';chipTxt='○ DEMORADO';}
+    const dCls=r.delta>0?'dp':r.delta<0?'dn':'dz';
+    const dStr=r.delta>0?'+'+r.delta.toLocaleString('es'):r.delta.toLocaleString('es');
+    return `<tr>
+      <td><div class="zname" style="color:${col}">${r.zona}</div><div class="ztype">${r.vueltas}x año · ${Math.round(r.total/r.vueltas).toLocaleString('es')} pos. únicas</div></td>
+      <td class="num">${r.total.toLocaleString('es')}</td>
+      <td class="num" style="color:var(--dim)">${r.planAcum.toLocaleString('es')}</td>
+      <td class="num" style="color:${col}">${r.realAcum.toLocaleString('es')}</td>
+      <td class="num"><span class="delta ${dCls}">${dStr}</span></td>
+      <td class="num"><span class="delta ${dCls}">${r.planAcum > 0 ? ((r.delta / r.planAcum) * 100).toFixed(1) + '%' : '–'}</span></td>
+      <td><div class="pb-wrap"><div class="pb"><div class="pb-plan" style="width:${Math.min(planPct,100)}%"></div><div class="pb-real" style="width:${Math.min(realPct,100)}%;background:${col}"></div></div><div class="pb-pct" style="color:${col}">${realPct}%</div></div></td>
+      <td><span class="chip ${chipCls}">${chipTxt}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFilters(zones){
+  const all=['ALL',...zones];
+  document.getElementById('filters').innerHTML=all.map(z=>`
+    <button class="fbtn${STATE.activeFilter===z?' active':''}" onclick="setFilter('${z}')">${z==='ALL'?'TODAS':z}</button>`).join('');
+}
+
+function setFilter(z){
+  STATE.activeFilter=z;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('active',b.textContent===(z==='ALL'?'TODAS':z)));
+  if(STATE.chart){
+    STATE.chart.data.datasets.forEach(ds=>{
+      ds.hidden=(z!=='ALL')&&!ds.label.includes(z);
+    });
+    STATE.chart.update();
+  }
+}
+
+function renderChart(zones,curSem){
+  const sems=STATE.weekRef.filter(w=>w.semNum<=curSem).map(w=>w.semNum);
+  const labels=sems.map(s=>'S'+String(s).padStart(2,'0'));
+  const datasets=[];
+  zones.forEach(zona=>{
+    const col=ZONA_COLORS[zona]||'#888';
+    let pc=0,rc=0;
+    const pd=sems.map(s=>{pc+=(STATE.planBySemZone[zona]||{})[s]||0;return pc;});
+    const rd=sems.map(s=>{rc+=(STATE.realBySemZone[zona]||{})[s]||0;return rc;});
+    datasets.push({label:'Plan '+zona,data:pd,borderColor:col+'55',backgroundColor:'transparent',borderWidth:1.5,borderDash:[4,3],pointRadius:0,tension:.3});
+    datasets.push({label:'Real '+zona,data:rd,borderColor:col,backgroundColor:col+'15',borderWidth:2,pointRadius:2,pointHoverRadius:5,fill:false,tension:.3});
+  });
+  if(STATE.chart) STATE.chart.destroy();
+  const ctx=document.getElementById('chart').getContext('2d');
+  STATE.chart=new Chart(ctx,{
+    type:'line',data:{labels,datasets},
+    options:{
+      responsive:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:'#1e2029',borderColor:'#2a2d3a',borderWidth:1,titleColor:'#9399a8',bodyColor:'#e8eaf0',titleFont:{family:'IBM Plex Mono',size:10},bodyFont:{family:'IBM Plex Mono',size:11},
+          callbacks:{label:ctx=>{const l=ctx.dataset.label||'';return(l.startsWith('Real')?'● ':'○ ')+l+': '+(ctx.raw||0).toLocaleString('es');}}}
+      },
+      scales:{
+        x:{grid:{color:'#1e2029'},ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10},maxRotation:0}},
+        y:{grid:{color:'#1e2029'},ticks:{color:'#6b7080',font:{family:'IBM Plex Mono',size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'k':v}}
+      }
+    }
+  });
+}
+
+function renderHeatmap(zones,curSem){
+  const sems=STATE.weekRef.filter(w=>w.semNum<=curSem).map(w=>w.semNum);
+  function pct(zona,sem){
+    const plan=(STATE.planBySemZone[zona]||{})[sem]||0;
+    const real=(STATE.realBySemZone[zona]||{})[sem]||0;
+    if(plan===0) return real>0?2:-1;
+    return real/plan;
+  }
+  function cellBg(p){
+    if(p<0) return '#1a1d24';
+    if(p===0) return '#1a1d24';
+    if(p>=1) return 'rgba(82,227,160,.65)';
+    if(p>=.8) return 'rgba(255,184,77,.55)';
+    return 'rgba(255,92,92,.5)';
+  }
+  function cellTxt(p){
+    if(p<0) return '–';
+    if(p===0) return '–';
+    if(p>=1) return '✓';
+    if(p===2) return '✓';
+    return Math.round(p*100)+'%';
+  }
+
+  let html=`<thead><tr><th class="zone-th">Zona</th>`;
+  sems.forEach(s=>{
+    const cur=s===curSem;
+    html+=`<th style="color:${cur?'var(--accent)':'var(--muted)'};font-weight:${cur?700:400}">S${String(s).padStart(2,'0')}</th>`;
+  });
+  html+=`</tr></thead><tbody>`;
+
+  zones.forEach(zona=>{
+    const col=ZONA_COLORS[zona]||'#888';
+    html+=`<tr><td style="padding:4px 8px;color:${col};white-space:nowrap;font-size:10px">${zona}</td>`;
+    sems.forEach(s=>{
+      const p=pct(zona,s);
+      const bg=cellBg(p);
+      const txt=cellTxt(p);
+      const textColor=(bg==='#1a1d24')?'var(--muted)':'#0d0f14';
+      html+=`<td><div class="hm-cell" style="background:${bg};color:${textColor}">${txt}</div></td>`;
+    });
+    html+=`</tr>`;
+  });
+  html+=`</tbody>`;
+  document.getElementById('heatmap').innerHTML=html;
+}
+</script>
+</body>
+</html>
